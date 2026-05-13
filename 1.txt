@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Рыжик 🐱</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+–bg: #fdf6ee;
+–warm: #f5e6d3;
+–orange: #e8832a;
+–orange2: #f4a94e;
+–dark: #3d2b1f;
+–muted: #9c7b6a;
+–green: #6bbf6b;
+–red: #e05555;
+–blue: #5b9bd5;
+–pink: #f06292;
+}
+
+body {
+font-family: ‘Nunito’, sans-serif;
+background: var(–bg);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px;
+overflow-x: hidden;
+}
+
+h1 {
+font-size: 22px;
+font-weight: 800;
+color: var(–orange);
+margin-bottom: 4px;
+letter-spacing: 0.02em;
+}
+
+.subtitle {
+font-size: 12px;
+color: var(–muted);
+margin-bottom: 16px;
+}
+
+/* Статы */
+.stats {
+display: flex;
+gap: 10px;
+width: 100%;
+max-width: 340px;
+margin-bottom: 14px;
+}
+
+.stat {
+flex: 1;
+background: white;
+border-radius: 14px;
+padding: 8px 10px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.stat-label {
+font-size: 10px;
+color: var(–muted);
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+margin-bottom: 4px;
+}
+
+.stat-bar {
+height: 8px;
+background: #f0e8e0;
+border-radius: 99px;
+overflow: hidden;
+}
+
+.stat-fill {
+height: 100%;
+border-radius: 99px;
+transition: width 0.4s ease;
+}
+
+.stat-fill.hunger { background: linear-gradient(90deg, #f4a94e, #e8832a); }
+.stat-fill.happy  { background: linear-gradient(90deg, #f06292, #e91e8c); }
+.stat-fill.energy { background: linear-gradient(90deg, #5b9bd5, #1976d2); }
+
+/* Сцена */
+.scene {
+width: 100%;
+max-width: 340px;
+height: 280px;
+background: linear-gradient(180deg, #fff8f0 0%, #fdecd8 100%);
+border-radius: 24px;
+box-shadow: 0 4px 24px rgba(232,131,42,0.15);
+position: relative;
+overflow: hidden;
+margin-bottom: 14px;
+cursor: pointer;
+user-select: none;
+-webkit-tap-highlight-color: transparent;
+}
+
+/* Пол */
+.scene::after {
+content: ‘’;
+position: absolute;
+bottom: 0; left: 0; right: 0;
+height: 60px;
+background: linear-gradient(180deg, transparent, #f5dfc0);
+border-radius: 0 0 24px 24px;
+}
+
+/* Кот — canvas */
+#catCanvas {
+position: absolute;
+bottom: 30px;
+left: 50%;
+transform: translateX(-50%);
+image-rendering: pixelated;
+z-index: 2;
+}
+
+/* Эффекты */
+.effect {
+position: absolute;
+font-size: 24px;
+pointer-events: none;
+z-index: 10;
+animation: floatUp 1.2s ease-out forwards;
+}
+
+@keyframes floatUp {
+0%   { opacity: 1; transform: translateY(0) scale(1); }
+100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
+}
+
+/* Пузырь речи */
+.bubble {
+position: absolute;
+top: 16px;
+left: 50%;
+transform: translateX(-50%);
+background: white;
+border-radius: 16px;
+padding: 8px 14px;
+font-size: 13px;
+font-weight: 700;
+color: var(–dark);
+box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+white-space: nowrap;
+z-index: 5;
+opacity: 0;
+transition: opacity 0.3s;
+}
+
+.bubble.show { opacity: 1; }
+.bubble::after {
+content: ‘’;
+position: absolute;
+bottom: -8px;
+left: 50%;
+transform: translateX(-50%);
+border: 8px solid transparent;
+border-top-color: white;
+border-bottom: none;
+}
+
+/* Кнопки */
+.actions {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+width: 100%;
+max-width: 340px;
+}
+
+.btn {
+background: white;
+border: none;
+border-radius: 16px;
+padding: 14px 10px;
+font-family: ‘Nunito’, sans-serif;
+font-size: 14px;
+font-weight: 800;
+color: var(–dark);
+box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+cursor: pointer;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 4px;
+transition: transform 0.1s, box-shadow 0.1s;
+-webkit-tap-highlight-color: transparent;
+}
+
+.btn:active { transform: scale(0.94); box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+.btn .icon { font-size: 26px; }
+.btn.feed   { background: linear-gradient(135deg, #fff8f0, #fde8c8); }
+.btn.play   { background: linear-gradient(135deg, #fff0f5, #fdd8e8); }
+.btn.sleep  { background: linear-gradient(135deg, #f0f4ff, #d8e4fd); }
+.btn.pet    { background: linear-gradient(135deg, #f0fff4, #d8fde4); }
+
+.mood {
+margin-top: 12px;
+font-size: 13px;
+color: var(–muted);
+font-weight: 600;
+}
+
+/* Мурлыканье */
+.purr {
+position: absolute;
+font-size: 11px;
+font-weight: 800;
+color: var(–orange);
+pointer-events: none;
+z-index: 10;
+animation: floatUp 1.5s ease-out forwards;
+font-family: ‘Nunito’, sans-serif;
+}
+</style>
+
+</head>
+<body>
+
+<h1>🐱 Рыжик</h1>
+<p class="subtitle">Рыжий кот из загородного дома</p>
+
+<!-- Статы -->
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-label">🍗 Еда</div>
+    <div class="stat-bar"><div class="stat-fill hunger" id="barHunger" style="width:70%"></div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">😺 Счастье</div>
+    <div class="stat-bar"><div class="stat-fill happy" id="barHappy" style="width:80%"></div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">⚡ Энергия</div>
+    <div class="stat-bar"><div class="stat-fill energy" id="barEnergy" style="width:90%"></div></div>
+  </div>
+</div>
+
+<!-- Сцена -->
+
+<div class="scene" id="scene" onclick="petCat(event)">
+  <div class="bubble" id="bubble">Мяу!</div>
+  <canvas id="catCanvas" width="120" height="130"></canvas>
+</div>
+
+<div class="mood" id="mood">Рыжик доволен 😸</div>
+
+<!-- Кнопки -->
+
+<div class="actions">
+  <button class="btn feed" onclick="feedCat()">
+    <span class="icon">🍗</span> Покормить
+  </button>
+  <button class="btn pet" onclick="petCatBtn()">
+    <span class="icon">🤝</span> Погладить
+  </button>
+  <button class="btn play" onclick="playCat()">
+    <span class="icon">🧶</span> Поиграть
+  </button>
+  <button class="btn sleep" onclick="sleepCat()">
+    <span class="icon">💤</span> Поспать
+  </button>
+</div>
+
+<script>
+// ===== Состояние =====
+const state = {
+  hunger: 70,
+  happy: 80,
+  energy: 90,
+  mood: 'normal', // normal, happy, sleep, eating, playing
+  blinkTimer: 0,
+  tailAngle: 0,
+  tailDir: 1,
+  eyeClose: 0,
+  purring: false,
+};
+
+// ===== Canvas кот =====
+const canvas = document.getElementById('catCanvas');
+const ctx = canvas.getContext('2d');
+
+const ORANGE = '#e8832a';
+const ORANGE2 = '#f4a94e';
+const DARK = '#3d2b1f';
+const WHITE = '#fff8f0';
+const PINK = '#f9b8c4';
+
+function drawCat(mood) {
+  ctx.clearRect(0, 0, 120, 130);
+
+  const blink = state.eyeClose > 0;
+  const happy = mood === 'happy' || mood === 'eating' || mood === 'playing';
+  const sleeping = mood === 'sleep';
+
+  // Хвост (анимированный)
+  const tx = 90 + Math.sin(state.tailAngle) * 12;
+  const ty = 100 - Math.cos(state.tailAngle) * 18;
+  ctx.beginPath();
+  ctx.moveTo(80, 95);
+  ctx.quadraticCurveTo(tx + 10, ty + 10, tx, ty - 10);
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = ORANGE;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  // кончик хвоста
+  ctx.beginPath();
+  ctx.arc(tx, ty - 10, 7, 0, Math.PI * 2);
+  ctx.fillStyle = ORANGE2;
+  ctx.fill();
+
+  // Тело
+  ctx.beginPath();
+  ctx.ellipse(55, 90, 32, 36, 0, 0, Math.PI * 2);
+  ctx.fillStyle = ORANGE2;
+  ctx.fill();
+
+  // Полосы на теле
+  ctx.strokeStyle = ORANGE;
+  ctx.lineWidth = 2.5;
+  ctx.globalAlpha = 0.4;
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(32 + i * 12, 75);
+    ctx.lineTo(28 + i * 12, 105);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Живот
+  ctx.beginPath();
+  ctx.ellipse(55, 98, 16, 20, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#fde8c8';
+  ctx.fill();
+
+  // Лапы
+  ctx.fillStyle = ORANGE2;
+  // левая
+  ctx.beginPath();
+  ctx.ellipse(35, 122, 10, 7, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // правая
+  ctx.beginPath();
+  ctx.ellipse(72, 122, 10, 7, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // пальцы
+  ctx.fillStyle = ORANGE;
+  ctx.globalAlpha = 0.5;
+  [-4, 0, 4].forEach(dx => {
+    ctx.beginPath();
+    ctx.ellipse(35 + dx, 126, 2, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(72 + dx, 126, 2, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // Голова
+  ctx.beginPath();
+  ctx.ellipse(55, 52, 30, 27, 0, 0, Math.PI * 2);
+  ctx.fillStyle = ORANGE2;
+  ctx.fill();
+
+  // Полосы на лбу
+  ctx.strokeStyle = ORANGE;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath(); ctx.moveTo(46, 30); ctx.lineTo(44, 42); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(55, 28); ctx.lineTo(55, 40); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(64, 30); ctx.lineTo(66, 42); ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Уши
+  ctx.fillStyle = ORANGE;
+  ctx.beginPath();
+  ctx.moveTo(28, 35); ctx.lineTo(22, 18); ctx.lineTo(40, 28); ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(82, 35); ctx.lineTo(88, 18); ctx.lineTo(70, 28); ctx.closePath();
+  ctx.fill();
+  // внутри ушей
+  ctx.fillStyle = PINK;
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(30, 33); ctx.lineTo(26, 22); ctx.lineTo(38, 30); ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(80, 33); ctx.lineTo(84, 22); ctx.lineTo(72, 30); ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Глаза
+  if (sleeping) {
+    // спящие глаза — дуги
+    ctx.strokeStyle = DARK;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(44, 52, 7, Math.PI, 0); ctx.stroke();
+    ctx.beginPath(); ctx.arc(66, 52, 7, Math.PI, 0); ctx.stroke();
+    // zzz
+    ctx.fillStyle = '#5b9bd5';
+    ctx.font = 'bold 13px Nunito';
+    ctx.fillText('z', 78, 38);
+    ctx.font = 'bold 10px Nunito';
+    ctx.fillText('z', 86, 30);
+  } else if (blink) {
+    ctx.strokeStyle = DARK;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(37, 52); ctx.lineTo(51, 52); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(59, 52); ctx.lineTo(73, 52); ctx.stroke();
+  } else if (happy) {
+    // счастливые глаза — дуги вверх
+    ctx.strokeStyle = DARK;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(44, 54, 7, Math.PI, 0, true); ctx.stroke();
+    ctx.beginPath(); ctx.arc(66, 54, 7, Math.PI, 0, true); ctx.stroke();
+  } else {
+    // обычные глаза
+    ctx.fillStyle = DARK;
+    ctx.beginPath(); ctx.ellipse(44, 52, 7, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(66, 52, 7, 8, 0, 0, Math.PI * 2); ctx.fill();
+    // блик
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(47, 49, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(69, 49, 2.5, 0, Math.PI * 2); ctx.fill();
+    // зрачок
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath(); ctx.ellipse(44, 53, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(66, 53, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Нос
+  ctx.fillStyle = PINK;
+  ctx.beginPath();
+  ctx.moveTo(55, 62); ctx.lineTo(51, 58); ctx.lineTo(59, 58); ctx.closePath();
+  ctx.fill();
+
+  // Рот
+  ctx.strokeStyle = DARK;
+  ctx.lineWidth = 1.8;
+  if (happy) {
+    ctx.beginPath(); ctx.moveTo(50, 64); ctx.quadraticCurveTo(55, 70, 60, 64); ctx.stroke();
+  } else if (sleeping) {
+    ctx.beginPath(); ctx.moveTo(50, 65); ctx.lineTo(60, 65); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(51, 64); ctx.lineTo(55, 67); ctx.lineTo(59, 64); ctx.stroke();
+  }
+
+  // Усы
+  ctx.strokeStyle = WHITE;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.9;
+  // левые
+  [[24,57,43,59],[22,62,42,62],[24,67,43,64]].forEach(([x1,y1,x2,y2]) => {
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  });
+  // правые
+  [[86,57,67,59],[88,62,68,62],[86,67,67,64]].forEach(([x1,y1,x2,y2]) => {
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+
+  // Румянец если счастливый
+  if (happy) {
+    ctx.fillStyle = PINK;
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath(); ctx.ellipse(34, 62, 8, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(76, 62, 8, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ===== Анимация =====
+let frame = 0;
+let moodTimer = 0;
+
+function animate() {
+  frame++;
+
+  // Хвост
+  state.tailAngle += 0.04 * state.tailDir;
+  if (Math.abs(state.tailAngle) > 0.6) state.tailDir *= -1;
+
+  // Моргание
+  state.blinkTimer--;
+  if (state.blinkTimer < 0) {
+    state.eyeClose = 4;
+    state.blinkTimer = 120 + Math.random() * 100;
+  }
+  if (state.eyeClose > 0) state.eyeClose--;
+
+  // Сброс настроения
+  moodTimer--;
+  if (moodTimer < 0) {
+    state.mood = 'normal';
+  }
+
+  drawCat(state.mood);
+
+  // Мурлыканье визуальное
+  if (state.purring && frame % 40 === 0) {
+    spawnPurr();
+  }
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+// ===== Пузырь =====
+function showBubble(text) {
+  const b = document.getElementById('bubble');
+  b.textContent = text;
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 2000);
+}
+
+// ===== Эффекты =====
+function spawnEffect(emoji, x, y) {
+  const el = document.createElement('div');
+  el.className = 'effect';
+  el.textContent = emoji;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.getElementById('scene').appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+function spawnPurr() {
+  const el = document.createElement('div');
+  el.className = 'purr';
+  el.textContent = 'мур~';
+  el.style.left = (40 + Math.random() * 60) + 'px';
+  el.style.top = (60 + Math.random() * 40) + 'px';
+  document.getElementById('scene').appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+// ===== Звуки через Web Audio =====
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function playMeow() {
+  try {
+    const ac = getAudio();
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(900, ac.currentTime + 0.1);
+    osc.frequency.exponentialRampToValueAtTime(500, ac.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.3, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.4);
+    osc.start(); osc.stop(ac.currentTime + 0.4);
+  } catch(e) {}
+}
+
+function playPurr() {
+  try {
+    const ac = getAudio();
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    const lfo = ac.createOscillator();
+    const lfoGain = ac.createGain();
+    lfo.connect(lfoGain); lfoGain.connect(gain.gain);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.value = 55;
+    lfo.frequency.value = 25;
+    lfoGain.gain.value = 0.15;
+    gain.gain.value = 0.12;
+    osc.start(); lfo.start();
+    osc.stop(ac.currentTime + 1.5);
+    lfo.stop(ac.currentTime + 1.5);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 1.5);
+  } catch(e) {}
+}
+
+function playEat() {
+  try {
+    const ac = getAudio();
+    [0, 0.15, 0.3].forEach(t => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 300 + Math.random() * 100;
+      gain.gain.setValueAtTime(0.15, ac.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t + 0.1);
+      osc.start(ac.currentTime + t);
+      osc.stop(ac.currentTime + t + 0.12);
+    });
+  } catch(e) {}
+}
+
+// ===== Обновление UI =====
+function clamp(v) { return Math.max(0, Math.min(100, v)); }
+
+function updateStats() {
+  document.getElementById('barHunger').style.width = state.hunger + '%';
+  document.getElementById('barHappy').style.width = state.happy + '%';
+  document.getElementById('barEnergy').style.width = state.energy + '%';
+
+  let moodText = '';
+  if (state.hunger < 20) moodText = 'Рыжик голоден 😿';
+  else if (state.energy < 20) moodText = 'Рыжик хочет спать 😴';
+  else if (state.happy > 70) moodText = 'Рыжик очень доволен 😸';
+  else if (state.happy < 30) moodText = 'Рыжик скучает... 🙁';
+  else moodText = 'Рыжик в порядке 😺';
+  document.getElementById('mood').textContent = moodText;
+}
+
+// ===== Действия =====
+function feedCat() {
+  if (state.hunger >= 95) { showBubble('Я сыт!'); return; }
+  state.hunger = clamp(state.hunger + 25);
+  state.happy = clamp(state.happy + 5);
+  state.mood = 'eating';
+  moodTimer = 80;
+  state.purring = false;
+  playEat();
+  spawnEffect('🍗', 80, 60);
+  spawnEffect('😋', 30, 40);
+  showBubble('Мням-мням!');
+  updateStats();
+}
+
+function petCatBtn() {
+  doPet(60, 100);
+}
+
+function petCat(e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  doPet(x, y);
+}
+
+function doPet(x, y) {
+  state.happy = clamp(state.happy + 12);
+  state.mood = 'happy';
+  moodTimer = 90;
+  state.purring = true;
+  playPurr();
+  const emojis = ['💛','✨','🧡','💫'];
+  spawnEffect(emojis[Math.floor(Math.random()*emojis.length)], x - 15, y - 20);
+  const phrases = ['Муррр~', 'Ещё!', 'Хорошо~', 'Пуррр...'];
+  showBubble(phrases[Math.floor(Math.random()*phrases.length)]);
+  setTimeout(() => { state.purring = false; }, 3000);
+  updateStats();
+}
+
+function playCat() {
+  if (state.energy < 15) { showBubble('Устал...'); return; }
+  state.happy = clamp(state.happy + 20);
+  state.energy = clamp(state.energy - 15);
+  state.mood = 'playing';
+  moodTimer = 100;
+  state.purring = false;
+  playMeow();
+  spawnEffect('🧶', 20, 80);
+  spawnEffect('⚡', 90, 50);
+  showBubble('МЯУ! Играем!');
+  updateStats();
+}
+
+function sleepCat() {
+  if (state.energy >= 95) { showBubble('Не хочу спать!'); return; }
+  state.energy = clamp(state.energy + 35);
+  state.mood = 'sleep';
+  moodTimer = 150;
+  state.purring = false;
+  spawnEffect('💤', 70, 30);
+  showBubble('Zzz...');
+  updateStats();
+}
+
+// ===== Деградация со временем =====
+setInterval(() => {
+  state.hunger = clamp(state.hunger - 2);
+  state.happy = clamp(state.happy - 1);
+  state.energy = clamp(state.energy - 0.5);
+  updateStats();
+}, 10000);
+
+updateStats();
+</script>
+
+</body>
+</html>
